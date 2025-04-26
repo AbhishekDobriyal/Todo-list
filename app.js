@@ -3,6 +3,8 @@ const app = express();
 const db = require('./db');
 const userRoutes = require('./routes/userRoutes');
 
+
+// parsing incoming data( from frontend, postman) to json format & put it into req.body
 app.use(express.json());
 
 app.get('/', (req,res)=>{
