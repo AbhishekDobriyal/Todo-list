@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const User = require('./../models/usermodel');
 
-router.get('/signup', async (req, res)=>{
+router.post('/signup', async (req, res)=>{
 
     try{
         const data = req.body;
 
         // fetching existing data
-        const existingEmail = User.findOne({email: data.email}) ;
+        const existingEmail = await User.findOne({email: data.email}) ;
 
         // if email exits return
         if(existingEmail){
