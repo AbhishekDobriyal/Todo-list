@@ -77,6 +77,35 @@ router.post('/add-task', async (req,res)=>{
         res.status(500).json({ error: "Internal Server Error" });        
     }
     
-})
+});
+
+router.post('/view-task', async (req,res)=>{
+    
+    try{
+
+        const data = req.body;
+
+        const loggedinUser = await User.findOne({email: data.email});
+
+        if (!loggedinUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({user: loggedinUser.data});
+
+        // for cleaner output, only the content of each task, you can map it like this:
+
+        // const tasks = loggedinUser.data.map(task => task.content);
+        // res.status(200).json({ tasks });
+
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({ error: "Internal Server Error" });        
+    }
+    
+});
+
+
 
 module.exports = router;
