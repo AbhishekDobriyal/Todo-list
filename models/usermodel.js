@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     },
 
     data: [{
-        
+
         content:{
             type: String,
             required : true,
@@ -26,3 +26,6 @@ const userSchema = new mongoose.Schema({
     }]
 
 });
+
+const user = mongoose.model('user',userSchema);
+module.exports = user;
