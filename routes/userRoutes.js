@@ -106,6 +106,25 @@ router.post('/view-task', async (req,res)=>{
     
 });
 
+router.delete('/delete-task/:Id', async (req,res)=>{
+
+    try{
+        const taskId = req.params.Id
+        console.log("taskId is: " + taskId );
+        // Delete the specific task directly from the user's data array
+        await User.updateOne(
+        { "data._id": taskId },  // Find user with task in their data array
+        { $pull: { data: { _id: taskId } } }  // Remove the task with this taskId
+        );
+
+        res.status(200).json({message: "Task deleted successfully!"});
+
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({error: "internal server error"});
+    }
+});
 
 
 module.exports = router;
