@@ -106,7 +106,7 @@ router.post('/view-task', async (req,res)=>{
     
 });
 
-router.delete('/delete-task/:Id', async (req,res)=>{
+router.delete('/delete-task/:Id', async (req, res)=>{
 
     try{
         const taskId = req.params.Id
@@ -126,5 +126,34 @@ router.delete('/delete-task/:Id', async (req,res)=>{
     }
 });
 
+router.put('/update-task', async (req, res)=>{
+
+    try{
+
+        const info = req.body;
+
+        if (!info.id || !info.content) {
+            return res.status(400).json({ message: "Missing 'id' or 'content' in request body" });
+        }
+
+        console.log("Content to update: ", info.content);
+
+
+        const result = await User.updateOne(
+            {"data._id":info.id},
+            { $set :{ "data.$.content":info.content } }
+        );
+
+        if (result.modifiedCount > 0) {
+            res.status(200).json({ message: "Task updated successfully!" });
+        } else {
+            res.status(400).json({ message: "No task found to update." });
+        }
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({error: "internal server error"});
+    }
+});
 
 module.exports = router;
