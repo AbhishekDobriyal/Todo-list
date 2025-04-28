@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const User = require('./../models/usermodel');
 const bcrypt = require('bcrypt');
-const { JsonWebTokenError } = require('jsonwebtoken');
 const jwt = require('jsonwebtoken');
+const jwtAuthMiddleware = require('./../jwt');
 
 router.post('/signup', async (req, res)=>{
 
@@ -62,7 +62,7 @@ router.post('/login',async (req, res)=>{
             {expiresIn:'1h'}                                       // expiration  -- this is optional
         );
 
-        res.send({message: "Login Successful.", token : token});
+        res.status(200).json({message: "Login Successful.", token : token});
         
     }
     catch(err){
@@ -72,19 +72,21 @@ router.post('/login',async (req, res)=>{
     
 });
 
-router.post('/add-task', async (req,res)=>{
+router.post('/add-task', jwtAuthMiddleware, async (req,res)=>{
     
     try{
 
-        const data = req.body;
+        const { content } = req.body;
+        const { email } = req.data;    // req.data : middleware data contains email info from tokens
 
-        const loggedinUser = await User.findOne({email: data.email});
+        const loggedinUser = await User.findOne({email});
 
         if (!loggedinUser) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        loggedinUser.data.push({content: data.content});
+        loggedinUser.data.push({content});  //  agar (key, value) same ho to aisa kr sakte he
+                                            // can also be written as ({content:content})
 
         await loggedinUser.save();
 
@@ -98,13 +100,13 @@ router.post('/add-task', async (req,res)=>{
     
 });
 
-router.post('/view-task', async (req,res)=>{
+router.post('/view-task', jwtAuthMiddleware, async (req,res)=>{
     
     try{
 
-        const data = req.body;
-
-        const loggedinUser = await User.findOne({email: data.email});
+        const {email} = req.data;
+        
+        const loggedinUser = await User.findOne({email});
 
         if (!loggedinUser) {
             return res.status(404).json({ message: "User not found" });
@@ -125,14 +127,16 @@ router.post('/view-task', async (req,res)=>{
     
 });
 
-router.delete('/delete-task/:Id', async (req, res)=>{
+router.delete('/delete-task/:Id', jwtAuthMiddleware, async (req, res)=>{
 
     try{
         const taskId = req.params.Id
-        console.log("taskId is: " + taskId );
+        
+        const{email} = req.data;
+
         // Delete the specific task directly from the user's data array
         await User.updateOne(
-        { "data._id": taskId },  // Find user with task in their data array
+        { email, "data._id": taskId },  // Find user with task in their data array
         { $pull: { data: { _id: taskId } } }  // Remove the task with this taskId
         );
 
@@ -145,21 +149,22 @@ router.delete('/delete-task/:Id', async (req, res)=>{
     }
 });
 
-router.put('/update-task', async (req, res)=>{
+router.put('/update-task', jwtAuthMiddleware, async (req, res)=>{
 
     try{
 
         const info = req.body;
+        const {email} = req.data;
 
         if (!info.id || !info.content) {
             return res.status(400).json({ message: "Missing 'id' or 'content' in request body" });
         }
 
-        console.log("Content to update: ", info.content);
+        //console.log("Content to update: ", info.content);
 
 
         const result = await User.updateOne(
-            {"data._id":info.id},
+            {email, "data._id":info.id},
             { $set :{ "data.$.content":info.content } }
         );
 
